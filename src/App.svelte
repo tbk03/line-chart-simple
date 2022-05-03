@@ -19,7 +19,7 @@ let dataset;
 
 // read data from tutorial github repository
 onMount(async() => {
-	dataset = await csv("https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv",
+	dataset = await csv("https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv", 
 						processRow)
 						.then((rows) => {return rows;});
 	console.log(dataset);

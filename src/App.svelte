@@ -3,9 +3,11 @@ https://dev.to/learners/line-chart-with-svelte-and-d3-3086 -->
 
 <script>
 import { onMount } from "svelte";
-import { csv } from "d3";
+import { csv, extent, scaleLinear, scaleTime, line, curveNatural, timeFormat } from "d3";
 
 
+// create data structure for storing the dataset
+let dataset = [];
 	
 // convert data imported as text to correct type
 const processRow = function(data){
@@ -15,22 +17,41 @@ const processRow = function(data){
 	return data;
 }
 
-let dataset;
-
 // read data from tutorial github repository
 onMount(async() => {
 	dataset = await csv("https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv", 
 						processRow)
-						.then((rows) => {return rows;});
-	console.log(dataset);
+						.then((d) => {return d;});
 });
 
+const url_string = "https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv";
+
+// async function readData(url){
+//     let dataset = await csv(url)
+// 					.then(processRow);
+// 	console.log(dataset);
+// 	return dataset;
+//   }
+
+// readData(url_string);
+
+// dataset = csv(url_string)
+// 			.then(processRow);
+
+// Create scales 
+$: yScale = scaleLinear()
+			.domain(extent(dataset, (d) => d.temperature))
+			.range([0, 100]);
+
+$: console.log(yScale);
+console.log("at end of script");
+$: console.log(dataset);
 
 </script>
 
 <main>
 	<h1>Hello Chris!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<p>{dataset}</p>
 </main>
 
 <style>

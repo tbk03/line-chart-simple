@@ -1,15 +1,36 @@
-<!-- code minimally adapted from Anup Joseph's Line Chart with Svelte and D3
-https://dev.to/learners/line-chart-with-svelte-and-d3-3086 -->
+<!-- 
+
+Line chart code adapted from Anup Joseph's Line Chart with Svelte and D3
+https://dev.to/learners/line-chart-with-svelte-and-d3-3086 
+
+Code structured using Amelia Wattenberger's design pattern for prototyping in D3
+https://observablehq.com/@wattenberger/prototyping-in-d3
+
+-->
 
 <script>
+// ****************************************************************************************
+// 0. Setup - imports and variable declarations
+// ****************************************************************************************
+
 import { onMount } from "svelte";
 import { csv, extent, scaleLinear, scaleTime, line, curveNatural, timeFormat } from "d3";
 
 
 // create data structure for storing the dataset
 let dataset = [];
-	
-// convert data imported as text to correct type
+
+let scaleX;
+let scaleY;
+
+let lineGenerator;
+let lineObject;
+
+// ****************************************************************************************
+// 1. Access and parse data
+// ****************************************************************************************
+
+// function convert data imported as text to correct type
 const processRow = function(data){
 	data.temperature = +data.temperature;
 	data.timestamp = new Date(data.timestamp);
@@ -18,44 +39,97 @@ const processRow = function(data){
 }
 
 // read data from tutorial github repository
+const url_string = "https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv";
+
 onMount(async() => {
-	dataset = await csv("https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv", 
-						processRow)
+	dataset = await csv(url_string, processRow)
 						.then((d) => {return d;});
 });
 
-const url_string = "https://gist.githubusercontent.com/curran/60b40877ef898f19aeb8/raw/9476be5bd15fb15a6d5c733dd79788fb679c9be9/week_temperature_sf.csv";
+// ****************************************************************************************
+// 2. Create accessor functions
+// ****************************************************************************************
 
-// async function readData(url){
-//     let dataset = await csv(url)
-// 					.then(processRow);
-// 	console.log(dataset);
-// 	return dataset;
-//   }
+let accessX = (d) => d.timestamp;
+let accessY = (d) => d.temperature;
 
-// readData(url_string);
+// ****************************************************************************************
+// 3. Define chart structure
+// ****************************************************************************************
 
-// dataset = csv(url_string)
-// 			.then(processRow);
+let dms = {
+	width: 900,
+	height: 600,
+	marginTop: 15,
+	marginBottom: 50,
+	marginLeft: 50,
+	marginRight: 20
+};
 
-// Create scales 
-$: yScale = scaleLinear()
-			.domain(extent(dataset, (d) => d.temperature))
-			.range([0, 100]);
+dms.boundedWidth = dms.width - dms.marginLeft - dms.marginRight;
+dms.boundedHeight = dms.height - dms.marginTop - dms.marginBottom;
 
-$: console.log(yScale);
-console.log("at end of script");
-$: console.log(dataset);
+// ****************************************************************************************
+// 4. Create scales
+// ****************************************************************************************
+
+// need to be reactive as there is a wait for data to load from github
+$: {
+	scaleX = scaleTime()
+			.domain(extent(dataset, accessX))
+			.range([0, dms.boundedWidth]);
+
+	scaleY = scaleLinear()
+			.domain(extent(dataset, accessY))
+			.range([dms.boundedHeight, 0]);
+}
+
+// ****************************************************************************************
+// 5. Create elements of the chart
+// ****************************************************************************************
+
+// need to be reactive as there is a wait for data to load from github
+$: {
+	// create function for generating lines
+	lineGenerator = line()
+						.curve(curveNatural)
+						.x(d => scaleX(accessX(d)))
+						.y(d => scaleY(accessY(d)));
+
+	// create the line object for plotting
+	lineObject = lineGenerator(dataset);
+}
 
 </script>
 
 <main>
-	<h1>Hello Chris!</h1>
-	<p>{dataset}</p>
+	<svg width = {dms.width} height = {dms.height}>
+		<g transform={`translate(${dms.marginLeft}, ${dms.marginRight})`}>
+			
+			<!-- add data points -->
+			{#each dataset as d, i}
+				<circle
+					cx = {scaleX(accessX(d))}
+					cy = {scaleY(accessY(d))}
+					r = "5"
+				/>
+			{/each}
+
+			<!-- add line  -->
+			<path class="line" d={lineObject}/>
+
+		</g>
+
+	</svg>
 </main>
 
 <style>
-	main {
+	.line{
+		fill: transparent;
+		stroke: rgb(0, 0, 0);
+	}
+
+	/* main {
 		text-align: center;
 		padding: 1em;
 		max-width: 240px;
@@ -73,5 +147,5 @@ $: console.log(dataset);
 		main {
 			max-width: none;
 		}
-	}
+	} */
 </style>

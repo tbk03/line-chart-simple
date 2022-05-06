@@ -13,9 +13,12 @@ https://observablehq.com/@wattenberger/prototyping-in-d3
 // 0. Setup - imports and variable declarations
 // ****************************************************************************************
 
+// libraries
 import { onMount } from "svelte";
 import { csv, extent, scaleLinear, scaleTime, line, curveNatural, timeFormat } from "d3";
 
+// svelte components
+import Axis from "./components/Axis.svelte";
 
 // create data structure for storing the dataset
 let dataset = [];
@@ -103,8 +106,9 @@ $: {
 </script>
 
 <main>
+
 	<svg width = {dms.width} height = {dms.height}>
-		<g transform={`translate(${dms.marginLeft}, ${dms.marginRight})`}>
+		<g transform={`translate(${dms.marginLeft}, ${dms.marginTop})`}>
 			
 			<!-- add data points -->
 			{#each dataset as d, i}
@@ -112,11 +116,14 @@ $: {
 					cx = {scaleX(accessX(d))}
 					cy = {scaleY(accessY(d))}
 					r = "5"
+					class = "point"
 				/>
 			{/each}
 
-			<!-- add line  -->
+			<!-- add graph line  -->
 			<path class="line" d={lineObject}/>
+
+			<Axis class="axis" scale={scaleX}/>
 
 		</g>
 
@@ -127,6 +134,12 @@ $: {
 	.line{
 		fill: transparent;
 		stroke: rgb(0, 0, 0);
+	}
+
+	.point{
+		fill: #A6A6A670;
+		stroke: rgb(0, 0, 0);
+		stroke-width: 0;
 	}
 
 	/* main {
